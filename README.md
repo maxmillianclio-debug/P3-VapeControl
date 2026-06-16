@@ -4,7 +4,7 @@ A personal-use iOS app to monitor and control a PAX 3 vaporizer over Bluetooth. 
 
 > **Disclaimer**: Independent personal tool. Not affiliated with, endorsed by, or connected to PAX Labs. PAX® is a registered trademark of PAX Labs. This app contains no PAX branding, logos, or proprietary assets.
 
-https://media.giphy.com/media/513lZvPf6khjIQFibF/giphy.gif
+https://buymeacoffee.com/selfmeister
 
 ---
 
