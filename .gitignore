@@ -1,0 +1,17 @@
+# Xcode build artifacts
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+
+# Xcode user-specific settings (each developer has their own)
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+
+# Dependency managers (none used here)
+Pods/
+.build/
+.swiftpm/
+
+# macOS
+.DS_Store
