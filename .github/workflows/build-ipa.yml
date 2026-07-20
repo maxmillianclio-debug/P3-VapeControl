@@ -1,0 +1,66 @@
+name: Build unsigned IPA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Show available schemes
+        run: |
+          xcodebuild -list \
+            -project PaxController.xcodeproj
+
+      - name: Build unsigned iPhone app
+        run: |
+          xcodebuild \
+            -project PaxController.xcodeproj \
+            -scheme PaxController \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath "$GITHUB_WORKSPACE/build" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            clean build
+
+      - name: Locate compiled app
+        run: |
+          find "$GITHUB_WORKSPACE/build" \
+            -type d \
+            -name "*.app" \
+            -print
+
+      - name: Package unsigned IPA
+        run: |
+          APP_PATH=$(find "$GITHUB_WORKSPACE/build/Build/Products/Release-iphoneos" \
+            -maxdepth 1 \
+            -type d \
+            -name "*.app" \
+            | head -n 1)
+
+          if [ -z "$APP_PATH" ]; then
+            echo "No compiled .app was found."
+            exit 1
+          fi
+
+          mkdir -p "$GITHUB_WORKSPACE/ipa/Payload"
+          cp -R "$APP_PATH" "$GITHUB_WORKSPACE/ipa/Payload/"
+
+          cd "$GITHUB_WORKSPACE/ipa"
+          zip -r PaxController-unsigned.ipa Payload
+
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: PaxController-unsigned-IPA
+          path: ipa/PaxController-unsigned.ipa
+          if-no-files-found: error
