@@ -3,6 +3,9 @@ name: Build unsigned IPA
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: macos-latest
@@ -10,14 +13,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Show Xcode version
-        run: xcodebuild -version
-
-      - name: Show available schemes
-        run: |
-          xcodebuild -list \
-            -project PaxController.xcodeproj
 
       - name: Build unsigned iPhone app
         run: |
@@ -32,13 +27,6 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             clean build
 
-      - name: Locate compiled app
-        run: |
-          find "$GITHUB_WORKSPACE/build" \
-            -type d \
-            -name "*.app" \
-            -print
-
       - name: Package unsigned IPA
         run: |
           APP_PATH=$(find "$GITHUB_WORKSPACE/build/Build/Products/Release-iphoneos" \
@@ -48,7 +36,7 @@ jobs:
             | head -n 1)
 
           if [ -z "$APP_PATH" ]; then
-            echo "No compiled .app was found."
+            echo "No compiled app found."
             exit 1
           fi
 
@@ -58,9 +46,17 @@ jobs:
           cd "$GITHUB_WORKSPACE/ipa"
           zip -r PaxController-unsigned.ipa Payload
 
-      - name: Upload unsigned IPA
+      - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
           name: PaxController-unsigned-IPA
           path: ipa/PaxController-unsigned.ipa
-          if-no-files-found: error
+
+      - name: Publish IPA as GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "ipa-build-${{ github.run_number }}" \
+            "$GITHUB_WORKSPACE/ipa/PaxController-unsigned.ipa" \
+            --title "PaxController IPA Build ${{ github.run_number }}" \
+            --notes "Unsigned IPA. Sign with ESign before installing."
